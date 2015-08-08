@@ -2,18 +2,6 @@
 
 namespace PureJSON;
 
-if (!defined('JSON_ERROR_UTF8'))
-    define('JSON_ERROR_UTF8', 5);
-
-if (!defined('JSON_ERROR_RECURSION'))
-    define('JSON_ERROR_RECURSION', 6);
-
-if (!defined('JSON_ERROR_INF_OR_NAN'))
-    define('JSON_ERROR_INF_OR_NAN', 7);
-
-if (!defined('JSON_ERROR_UNSUPPORTED_TYPE'))
-    define('JSON_ERROR_UNSUPPORTED_TYPE', 8);
-
 final class JSON {
     /**
      * @param string $json   JSON string
@@ -65,9 +53,9 @@ final class JSON {
      */
     private static function checkValue($value) {
         if (is_float($value) && !is_finite($value)) {
-            throw new JSONException(JSON_ERROR_INF_OR_NAN);
+            throw new JSONException("Inf and NaN cannot be JSON encoded", JSON_ERROR_INF_OR_NAN);
         } else if (is_object($value) || is_resource($value)) {
-            throw new JSONException(JSON_ERROR_UNSUPPORTED_TYPE);
+            throw new JSONException("Type is not supported", JSON_ERROR_UNSUPPORTED_TYPE);
         } else if (is_array($value)) {
             foreach ($value as $v)
                 self::checkValue($v);
@@ -75,9 +63,8 @@ final class JSON {
     }
 
     private static function checkError() {
-        $last = json_last_error();
-        if ($last !== JSON_ERROR_NONE)
-            throw new JSONException($last);
+        if (json_last_error() !== JSON_ERROR_NONE)
+            throw new JSONException(json_last_error_msg(), json_last_error());
     }
 
     /**
@@ -98,27 +85,8 @@ final class JSON {
             return $value;
         }
     }
-
 }
 
 final class JSONException extends \Exception {
-    /**
-     * @param int $code
-     */
-    function __construct($code) {
-        static $messages = array(
-            JSON_ERROR_NONE             => 'No error has occurred',
-            JSON_ERROR_DEPTH            => 'The maximum stack depth has been exceeded',
-            JSON_ERROR_STATE_MISMATCH   => 'Invalid or malformed JSON',
-            JSON_ERROR_CTRL_CHAR        => 'Control character error, possibly incorrectly encoded',
-            JSON_ERROR_SYNTAX           => 'Syntax error',
-            JSON_ERROR_UTF8             => 'Malformed UTF-8 characters, possibly incorrectly encoded',
-            JSON_ERROR_RECURSION        => 'One or more recursive references in the value to be encoded',
-            JSON_ERROR_INF_OR_NAN       => 'One or more NAN or INF values in the value to be encoded',
-            JSON_ERROR_UNSUPPORTED_TYPE => 'A value of a type that cannot be encoded was given',
-        );
-
-        parent::__construct($messages[$code], $code);
-    }
 }
 

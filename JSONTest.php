@@ -6,7 +6,7 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
     /**
      * @expectedException \PureJSON\JSONException
      * @expectedExceptionCode    8
-     * @expectedExceptionMessage A value of a type that cannot be encoded was given
+     * @expectedExceptionMessage Type is not supported
      */
     function testObject() {
         JSON::encode(array(new \stdClass));
@@ -15,7 +15,7 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
     /**
      * @expectedException \PureJSON\JSONException
      * @expectedExceptionCode    8
-     * @expectedExceptionMessage A value of a type that cannot be encoded was given
+     * @expectedExceptionMessage Type is not supported
      */
     function testResource() {
         JSON::encode(array(fopen('php://memory', 'rb')));
@@ -24,7 +24,7 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
     /**
      * @expectedException \PureJSON\JSONException
      * @expectedExceptionCode    7
-     * @expectedExceptionMessage One or more NAN or INF values in the value to be encoded
+     * @expectedExceptionMessage Inf and NaN cannot be JSON encoded
      */
     function testINF() {
         JSON::encode(array(INF));
@@ -33,7 +33,7 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
     /**
      * @expectedException \PureJSON\JSONException
      * @expectedExceptionCode    7
-     * @expectedExceptionMessage One or more NAN or INF values in the value to be encoded
+     * @expectedExceptionMessage Inf and NaN cannot be JSON encoded
      */
     function testNegINF() {
         JSON::encode(array(-INF));
@@ -42,7 +42,7 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
     /**
      * @expectedException \PureJSON\JSONException
      * @expectedExceptionCode    7
-     * @expectedExceptionMessage One or more NAN or INF values in the value to be encoded
+     * @expectedExceptionMessage Inf and NaN cannot be JSON encoded
      */
     function testNAN() {
         JSON::encode(array(NAN));
