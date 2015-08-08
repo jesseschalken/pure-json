@@ -1,0 +1,20 @@
+{
+  "name": "jesseschalken/pure-json",
+  "description": "json_encode/json_decode wrapper error checking and clean semantics",
+  "license": "LGPL-2.1",
+  "authors": [
+    {
+      "name": "Jesse Schalken",
+      "email": "me@jesseschalken.com"
+    }
+  ],
+  "autoload": {
+    "files": ["JSON.php"]
+  },
+  "autoload-dev": {
+    "files": ["JSONTest.php"]
+  },
+  "require-dev": {
+    "phpunit/phpunit": "4.8.2"
+  }
+}

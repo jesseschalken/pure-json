@@ -1,0 +1,97 @@
+<?php
+
+namespace PureJSON;
+
+class JSONTest extends \PHPUnit_Framework_TestCase {
+    /**
+     * @expectedException \PureJSON\JSONException
+     * @expectedExceptionCode    8
+     * @expectedExceptionMessage A value of a type that cannot be encoded was given
+     */
+    function testObject() {
+        JSON::encode(array(new \stdClass));
+    }
+
+    /**
+     * @expectedException \PureJSON\JSONException
+     * @expectedExceptionCode    8
+     * @expectedExceptionMessage A value of a type that cannot be encoded was given
+     */
+    function testResource() {
+        JSON::encode(array(fopen('php://memory', 'rb')));
+    }
+
+    /**
+     * @expectedException \PureJSON\JSONException
+     * @expectedExceptionCode    7
+     * @expectedExceptionMessage One or more NAN or INF values in the value to be encoded
+     */
+    function testINF() {
+        JSON::encode(array(INF));
+    }
+
+    /**
+     * @expectedException \PureJSON\JSONException
+     * @expectedExceptionCode    7
+     * @expectedExceptionMessage One or more NAN or INF values in the value to be encoded
+     */
+    function testNegINF() {
+        JSON::encode(array(-INF));
+    }
+
+    /**
+     * @expectedException \PureJSON\JSONException
+     * @expectedExceptionCode    7
+     * @expectedExceptionMessage One or more NAN or INF values in the value to be encoded
+     */
+    function testNAN() {
+        JSON::encode(array(NAN));
+    }
+
+    function testEmpty() {
+        self::assertEquals(JSON::encode(array()), '[]');
+    }
+
+    function testReversible() {
+        $values = array(
+            array('j'),
+            array(),
+            0,
+            0.0,
+            'lololololo',
+            '',
+            null,
+            true,
+            false,
+            -1.0 / 3.0,
+            array('a' => 0, 'z' => 1),
+            array('z' => 0, 'a' => 1),
+            M_PI,
+        );
+        self::assertEquals(JSON::decode(JSON::encode($values)), $values);
+    }
+
+    /**
+     * @expectedException \PureJSON\JSONException
+     * @expectedExceptionCode    5
+     * @expectedExceptionMessage Malformed UTF-8 characters, possibly incorrectly encoded
+     */
+    function testBinaryFail() {
+        $value = array(join(' ', range("\x00", "\xFF")));
+        self::assertEquals(JSON::decode(JSON::encode($value)), $value);
+    }
+
+    function testBinaryOkay() {
+        $value = array(join(' ', range("\x00", "\xFF")));
+        self::assertEquals(JSON::decode(JSON::encode($value, true), true), $value);
+    }
+
+    function testUnicode() {
+        $value = array("־׀׃׆אבגדהוזחטיךכלםמןנסעףפץצקרשתװױײ׳״");
+
+        // Just make sure this is in fact utf-8
+        self::assertNotEquals(utf8_encode($value[0]), $value[0]);
+
+        self::assertEquals(JSON::decode(JSON::encode($value)), $value);
+    }
+}
