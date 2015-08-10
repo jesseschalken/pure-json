@@ -94,4 +94,24 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
 
         self::assertEquals(JSON::decode(JSON::encode($value)), $value);
     }
+
+    function testPerformance() {
+        ini_set('memory_limit', '-1');
+
+        $value1 = 'hello';
+        for ($i = 0; $i < 7; $i++) {
+            $value1 = array_fill(0, 7, $value1);
+        }
+
+        $t = microtime(true);
+
+        $json   = JSON::encode($value1, true);
+        $value2 = JSON::decode($json, true);
+
+        $t = microtime(true) - $t;
+
+        printf(__METHOD__ . " took %.3fs\n", $t);
+
+        self::assertEquals($value2, $value1);
+    }
 }
