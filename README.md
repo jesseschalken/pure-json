@@ -8,7 +8,7 @@ $json  = JSON::encode($value);
 $value = JSON::decode($json);
 ```
 
-`JSON::encode()` will only accept types which can be converted into their exact original by `JSON::decode()`, namely:
+`JSON::encode()` will only accept values which can be converted into their exact original by `JSON::decode()`, so that `JSON::decode(JSON::encode($x)) === $x`. The accept values are:
 - `int`
 - `string`
 - `float` (but not `INF`, `-INF` or `NAN`)
