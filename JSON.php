@@ -22,7 +22,7 @@ final class JSON {
 
     /**
      * @param mixed $value  PHP value
-     * @param bool  $binary Interpret strings in the PHP value as binary/ISO-5591-1 instead of UTF-8
+     * @param bool  $binary Interpret strings in the PHP value as binary/ISO-8859-1 instead of UTF-8
      * @param bool  $pretty Whether JSON should be pretty printed (true) or not (false)
      * @return string JSON string
      * @throws JSONException
