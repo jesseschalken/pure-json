@@ -73,7 +73,7 @@ final class JSON {
      * @param callable $callback
      * @return mixed
      */
-    private static function mapStrings($value, callable $callback) {
+    private static function mapStrings($value, $callback) {
         if (is_string($value)) {
             return $callback($value);
         } else if (is_array($value)) {
