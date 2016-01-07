@@ -14,8 +14,9 @@ final class JSON {
         self::checkError();
         self::checkValue($value);
 
-        if ($binary)
+        if ($binary) {
             $value = self::mapStrings($value, 'utf8_decode');
+        }
 
         return $value;
     }
@@ -29,17 +30,22 @@ final class JSON {
      */
     static function encode($value, $binary = false, $pretty = false) {
         $flags = 0;
-        if (defined('JSON_PRETTY_PRINT') && $pretty)
+        if (defined('JSON_PRETTY_PRINT') && $pretty) {
             $flags |= JSON_PRETTY_PRINT;
-        if (defined('JSON_UNESCAPED_SLASHES'))
+        }
+        if (defined('JSON_UNESCAPED_SLASHES')) {
             $flags |= JSON_UNESCAPED_SLASHES;
-        if (defined('JSON_UNESCAPED_UNICODE'))
+        }
+        if (defined('JSON_UNESCAPED_UNICODE')) {
             $flags |= JSON_UNESCAPED_UNICODE;
-        if (defined('JSON_PRESERVE_ZERO_FRACTION'))
+        }
+        if (defined('JSON_PRESERVE_ZERO_FRACTION')) {
             $flags |= JSON_PRESERVE_ZERO_FRACTION;
+        }
 
-        if ($binary)
+        if ($binary) {
             $value = self::mapStrings($value, 'utf8_encode');
+        }
 
         self::checkValue($value);
         $json = json_encode($value, $flags);
@@ -57,14 +63,16 @@ final class JSON {
         } else if (is_object($value) || is_resource($value)) {
             throw new JSONException("Type is not supported", JSON_ERROR_UNSUPPORTED_TYPE);
         } else if (is_array($value)) {
-            foreach ($value as $v)
+            foreach ($value as $v) {
                 self::checkValue($v);
+            }
         }
     }
 
     private static function checkError() {
-        if (json_last_error() !== JSON_ERROR_NONE)
+        if (json_last_error() !== JSON_ERROR_NONE) {
             throw new JSONException(json_last_error_msg(), json_last_error());
+        }
     }
 
     /**
@@ -78,8 +86,9 @@ final class JSON {
             return $callback($value);
         } else if (is_array($value)) {
             $result = array();
-            foreach ($value as $k => $v)
+            foreach ($value as $k => $v) {
                 $result[self::mapStrings($k, $callback)] = self::mapStrings($v, $callback);
+            }
             return $result;
         } else {
             return $value;
