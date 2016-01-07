@@ -99,7 +99,7 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
         ini_set('memory_limit', '-1');
 
         $value1 = 'hello';
-        for ($i = 0; $i < 7; $i++) {
+        for ($i = 0; $i < 6; $i++) {
             $value1 = array_fill(0, 7, $value1);
         }
 
