@@ -2,7 +2,97 @@
 
 namespace PureJSON;
 
+interface Serializable {
+    /** @return string */
+    public static function jsonType();
+}
+
 final class JSON {
+    /**
+     * @param mixed $value
+     * @param bool  $binary
+     * @param bool  $pretty
+     * @return string
+     */
+    public static function serialize($value, $binary = false, $pretty = false) {
+        return self::encode(self::_serialize($value), $binary, $pretty);
+    }
+
+    /**
+     * @param string   $json
+     * @param string[] $classes
+     * @param bool     $binary
+     * @return mixed
+     */
+    public static function deserialize($json, array $classes, $binary = false) {
+        $classMap = array();
+        /** @var Serializable $class */
+        foreach ($classes as $class) {
+            $classMap[$class::jsonType()] = $class;
+        }
+        return self::_deserialize(self::decode($json, $binary), $classMap);
+    }
+
+    private static function _serialize($value) {
+        if (is_array($value)) {
+            if (self::isAssoc($value)) {
+                throw new SerializationException("Associative arrays are not supported by " . __METHOD__);
+            }
+            $result = array();
+            foreach ($value as $v) {
+                $result[] = self::_serialize($v);
+            }
+            return $result;
+        } else if ($value instanceof Serializable) {
+            $result = array('@type' => $value->jsonType());
+            foreach (get_object_vars($value) as $k => $v) {
+                $result[$k] = self::_serialize($v);
+            }
+            return $result;
+        } else {
+            return $value;
+        }
+    }
+
+    private static function _deserialize($value, array $classMap) {
+        if (is_array($value)) {
+            if (self::isAssoc($value)) {
+                if (!isset($value['@type'])) {
+                    throw new SerializationException("Object is missing @type property");
+                }
+                $type = $value['@type'];
+                if (!isset($classMap[$type])) {
+                    throw new SerializationException("Unknown type '$type'");
+                }
+                $object = new $classMap[$type]();
+                foreach (get_object_vars($object) as $k => $_) {
+                    if (array_key_exists($k, $value)) {
+                        $object->$k = self::_deserialize($value[$k], $classMap);
+                    }
+                }
+                return $object;
+            } else {
+                $result = array();
+                foreach ($value as $v) {
+                    $result[] = self::_deserialize($v, $classMap);
+                }
+                return $result;
+            }
+        } else {
+            return $value;
+        }
+    }
+
+    private static function isAssoc(array $array) {
+        $i = 0;
+        foreach ($array as $k => $_) {
+            if ($k !== $i++) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * @param string $json   JSON string
      * @param bool   $binary Return a PHP value containing binary/ISO-8859-1 strings instead of UTF-8
@@ -97,5 +187,8 @@ final class JSON {
 }
 
 final class JSONException extends \Exception {
+}
+
+final class SerializationException extends \Exception {
 }
 
