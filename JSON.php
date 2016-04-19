@@ -9,7 +9,7 @@ final class JSON {
      * @return mixed PHP value
      * @throws JSONException
      */
-    static function decode($json, $binary = false) {
+    public static function decode($json, $binary = false) {
         $value = json_decode($json, true);
         self::checkError();
         self::checkValue($value);
@@ -28,7 +28,7 @@ final class JSON {
      * @return string JSON string
      * @throws JSONException
      */
-    static function encode($value, $binary = false, $pretty = false) {
+    public static function encode($value, $binary = false, $pretty = false) {
         $flags = 0;
         if (defined('JSON_PRETTY_PRINT') && $pretty) {
             $flags |= JSON_PRETTY_PRINT;

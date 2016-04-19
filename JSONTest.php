@@ -8,7 +8,7 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
      * @expectedExceptionCode    8
      * @expectedExceptionMessage Type is not supported
      */
-    function testObject() {
+    public function testObject() {
         JSON::encode(array(new \stdClass));
     }
 
@@ -17,7 +17,7 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
      * @expectedExceptionCode    8
      * @expectedExceptionMessage Type is not supported
      */
-    function testResource() {
+    public function testResource() {
         JSON::encode(array(fopen('php://memory', 'rb')));
     }
 
@@ -26,7 +26,7 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
      * @expectedExceptionCode    7
      * @expectedExceptionMessage Inf and NaN cannot be JSON encoded
      */
-    function testINF() {
+    public function testINF() {
         JSON::encode(array(INF));
     }
 
@@ -35,7 +35,7 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
      * @expectedExceptionCode    7
      * @expectedExceptionMessage Inf and NaN cannot be JSON encoded
      */
-    function testNegINF() {
+    public function testNegINF() {
         JSON::encode(array(-INF));
     }
 
@@ -44,15 +44,15 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
      * @expectedExceptionCode    7
      * @expectedExceptionMessage Inf and NaN cannot be JSON encoded
      */
-    function testNAN() {
+    public function testNAN() {
         JSON::encode(array(NAN));
     }
 
-    function testEmpty() {
+    public function testEmpty() {
         self::assertEquals(JSON::encode(array()), '[]');
     }
 
-    function testReversible() {
+    public function testReversible() {
         $values = array(
             array('j'),
             array(),
@@ -76,17 +76,17 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
      * @expectedExceptionCode    5
      * @expectedExceptionMessage Malformed UTF-8 characters, possibly incorrectly encoded
      */
-    function testBinaryFail() {
+    public function testBinaryFail() {
         $value = array(join(' ', range("\x00", "\xFF")));
         self::assertEquals(JSON::decode(JSON::encode($value)), $value);
     }
 
-    function testBinaryOkay() {
+    public function testBinaryOkay() {
         $value = array(join(' ', range("\x00", "\xFF")));
         self::assertEquals(JSON::decode(JSON::encode($value, true), true), $value);
     }
 
-    function testUnicode() {
+    public function testUnicode() {
         $value = array("־׀׃׆אבגדהוזחטיךכלםמןנסעףפץצקרשתװױײ׳״");
 
         // Just make sure this is in fact utf-8
@@ -95,7 +95,7 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
         self::assertEquals(JSON::decode(JSON::encode($value)), $value);
     }
 
-    function testPerformance() {
+    public function testPerformance() {
         ini_set('memory_limit', '-1');
 
         $value1 = 'hello';
