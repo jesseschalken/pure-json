@@ -36,7 +36,7 @@ final class JSON {
     private static function _serialize($value) {
         if (is_array($value)) {
             if (self::isAssoc($value)) {
-                throw new SerializationException("Associative arrays are not supported by " . __METHOD__);
+                throw new SerializationException("Associative arrays are not supported");
             }
             $result = array();
             foreach ($value as $v) {
@@ -61,14 +61,13 @@ final class JSON {
                     throw new SerializationException("Object is missing @type property");
                 }
                 $type = $value['@type'];
+                unset($value['@type']);
                 if (!isset($classMap[$type])) {
                     throw new SerializationException("Unknown type '$type'");
                 }
                 $object = new $classMap[$type]();
-                foreach (get_object_vars($object) as $k => $_) {
-                    if (array_key_exists($k, $value)) {
-                        $object->$k = self::_deserialize($value[$k], $classMap);
-                    }
+                foreach ($value as $k => $v) {
+                    $object->$k = self::_deserialize($v, $classMap);
                 }
                 return $object;
             } else {
