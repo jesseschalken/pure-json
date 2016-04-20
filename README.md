@@ -30,6 +30,7 @@ PureJSON provides a completely optional feature to assist in serializing PHP obj
 The methods `JSON::serialize()` and `JSON::deserialize()` are alternatives to `JSON::encode()` and `JSON::decode()` which map the JSON `{...}` syntax to and from PHP objects instead of to and from PHP associative arrays. Whereas `JSON::encode()` rejects objects and accepts associative arrays, `JSON::serialize()` rejects associative arrays and accepts objects.
 
 Objects passed to `JSON::serialize()` must:
+
 1. implement the `PureJSON\Serializable` interface
 2. have a public constructor without parameters (or with only optional parameters)
 3. have only public properties (any protected or private properties are ignored)
