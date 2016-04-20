@@ -37,18 +37,23 @@ final class JSON {
         if (is_array($value)) {
             if (self::isAssoc($value)) {
                 throw new SerializationException("Associative arrays are not supported");
+            } else {
+                $result = array();
+                foreach ($value as $v) {
+                    $result[] = self::_serialize($v);
+                }
+                return $result;
             }
-            $result = array();
-            foreach ($value as $v) {
-                $result[] = self::_serialize($v);
+        } else if (is_object($value)) {
+            if ($value instanceof Serializable) {
+                $result = array('@type' => $value->jsonType());
+                foreach (get_object_vars($value) as $k => $v) {
+                    $result[$k] = self::_serialize($v);
+                }
+                return $result;
+            } else {
+                throw new SerializationException("Objects must implement PureJSON\\Serializable");
             }
-            return $result;
-        } else if ($value instanceof Serializable) {
-            $result = array('@type' => $value->jsonType());
-            foreach (get_object_vars($value) as $k => $v) {
-                $result[$k] = self::_serialize($v);
-            }
-            return $result;
         } else {
             return $value;
         }
@@ -63,7 +68,7 @@ final class JSON {
                 $type = $value['@type'];
                 unset($value['@type']);
                 if (!isset($classMap[$type])) {
-                    throw new SerializationException("Unknown type '$type'");
+                    throw new SerializationException("Unknown type '$type' (known types: " . join(', ', array_keys($classMap)) . ")");
                 }
                 $object = new $classMap[$type]();
                 foreach ($value as $k => $v) {
