@@ -41,7 +41,11 @@ final class JSON {
         $classMap = array();
         /** @var Serializable $class */
         foreach ($classes as $class) {
-            $classMap[$class::jsonType()] = $class;
+            $type = $class::jsonType();
+            if (isset($classMap[$type])) {
+                throw new SerializationException("Class list has two occurences of JSON type '$type' ($class and $classMap[$type])");
+            }
+            $classMap[$type] = $class;
         }
         return self::_deserialize(self::decode($json, $binary), $classMap);
     }
