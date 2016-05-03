@@ -3,8 +3,21 @@
 namespace PureJSON;
 
 interface Serializable {
-    /** @return string */
+    /**
+     * @param array $props
+     * @return Serializable
+     */
+    public static function jsonFromProps(array $props);
+
+    /**
+     * @return string
+     */
     public static function jsonType();
+
+    /**
+     * @return array
+     */
+    public function jsonToProps();
 }
 
 final class JSON {
@@ -38,19 +51,14 @@ final class JSON {
             if (self::isAssoc($value)) {
                 throw new SerializationException("Associative arrays are not supported");
             } else {
-                $result = array();
-                foreach ($value as $v) {
-                    $result[] = self::_serialize($v);
-                }
-                return $result;
+                return self::_serializeMany($value);
             }
         } else if (is_object($value)) {
             if ($value instanceof Serializable) {
-                $result = array('@type' => $value->jsonType());
-                foreach (get_object_vars($value) as $k => $v) {
-                    $result[$k] = self::_serialize($v);
-                }
-                return $result;
+                return self::_serializeMany(array_replace(
+                    $value->jsonToProps(),
+                    array('@type' => $value->jsonType())
+                ));
             } else {
                 throw new SerializationException("Objects must implement PureJSON\\Serializable");
             }
@@ -68,23 +76,31 @@ final class JSON {
                 $type = $value['@type'];
                 unset($value['@type']);
                 if (!isset($classMap[$type])) {
-                    throw new SerializationException("Unknown type '$type' (known types: " . join(', ', array_keys($classMap)) . ")");
+                    throw new SerializationException("Type tag '$type' must be one of: " . join(', ', array_keys($classMap)));
                 }
-                $object = new $classMap[$type]();
-                foreach ($value as $k => $v) {
-                    $object->$k = self::_deserialize($v, $classMap);
-                }
-                return $object;
+                return $classMap[$type]::jsonCreate(self::_deserializeMany($value, $classMap));
             } else {
-                $result = array();
-                foreach ($value as $v) {
-                    $result[] = self::_deserialize($v, $classMap);
-                }
-                return $result;
+                return self::_deserializeMany($value, $classMap);
             }
         } else {
             return $value;
         }
+    }
+
+    private static function _serializeMany(array $values) {
+        $res = array();
+        foreach ($values as $k => $v) {
+            $res[$k] = self::_serialize($v);
+        }
+        return $res;
+    }
+
+    private static function _deserializeMany(array $values, array $classMap) {
+        $res = array();
+        foreach ($values as $k => $v) {
+            $res[$k] = self::_deserialize($v, $classMap);
+        }
+        return $res;
     }
 
     private static function isAssoc(array $array) {

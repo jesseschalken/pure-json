@@ -29,11 +29,7 @@ PureJSON provides a completely optional feature to assist in serializing PHP obj
 
 The methods `JSON::serialize()` and `JSON::deserialize()` are alternatives to `JSON::encode()` and `JSON::decode()` which map the JSON `{...}` syntax to and from PHP objects instead of to and from PHP associative arrays. Whereas `JSON::encode()` rejects objects and accepts associative arrays, `JSON::serialize()` rejects associative arrays and accepts objects.
 
-Objects passed to `JSON::serialize()` must:
-
-1. implement the `PureJSON\Serializable` interface
-2. have a public constructor without parameters (or with only optional parameters)
-3. have only public properties (any protected or private properties are ignored)
+Objects passed to `JSON::serialize()` must implement the `PureJSON\Serializable` interface.
 
 In order for `JSON::deserialize()` to reproduce an instance of the original class, the special property `@type` is filled by `JSON::serialize()` with the result of the `jsonType()` method of `PureJSON\Serializable`, and `JSON::deserialize()` accepts an explicit list of classes implementing `PureJSON\Serializable` to instantiate.
 
@@ -47,7 +43,7 @@ With `JSON::encode()`/`JSON::decode()`:
 use PureJson\JSON;
 
 $company = array(
-	'name' => 'Good Company',
+	'name'      => 'Good Company',
     'employees' => array(
     	array(
         	'name' => 'Jesse',
@@ -72,32 +68,52 @@ use PureJson\JSON;
 use PureJson\Serializable;
 
 class Company implements Serializable {
+    public static function jsonFromProps(array $props) {
+        return new self($props['name'], $props['employees']);
+    }
+
 	public static function jsonType() {
     	return 'company';
     }
 
-	// Properties must be public
-	public $name;
-    public $employees;
+	private $name;
+    private $employees;
 
-	// Constructor must not have required parameters
-    public function __construct($name = null, $employees = array()) {
-    	$this->name = $name;
+    public function __construct($name, $employees) {
+    	$this->name      = $name;
         $this->employees = $employees;
+    }
+
+    public function jsonToProps() {
+        return array(
+            'name'      => $this->name,
+            'employees' => $this->employees,
+        );
     }
 }
 
 class Employee implements Serializable {
+    public static function jsonFromProps(array $props) {
+        return new self($props['name'], $props['role']);
+    }
+
 	public static function jsonType() {
     	return 'employee';
     }
 
-	public $name;
-    public $role;
+	private $name;
+    private $role;
 
-	public function __construct($name = null, $role = null) {
+	public function __construct($name, $role) {
     	$this->name = $name;
         $this->role = $role;
+    }
+
+    public function jsonToProps() {
+        return array(
+            'name' => $this->name,
+            'role' => $this->role,
+        );
     }
 }
 
