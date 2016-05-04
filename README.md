@@ -60,7 +60,21 @@ $company = array(
 $json    = JSON::encode($company);
 $company = JSON::decode($json);
 ```
-
+```json
+{
+    "name": "Good Company",
+    "employees": [
+        {
+            "name": "Jesse",
+            "role": "sales"
+        },
+        {
+            "name": "Ben",
+            "role": "Development"
+        }
+    ]
+}
+```
 With `JSON::serialize()`/`JSON::deserialize()`:
 
 ```php
@@ -131,4 +145,22 @@ $company = JSON::deserialize($json, array(
 	Company::class,
     Employee::class,
 ));
+```
+```json
+{
+    "@type": "company",
+    "name": "Good Company",
+    "employees": [
+        {
+            "@type": "employee",
+            "name": "Jesse",
+            "role": "sales"
+        },
+        {
+            "@type": "employee",
+            "name": "Ben",
+            "role": "Development"
+        }
+    ]
+}
 ```
