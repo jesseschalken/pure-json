@@ -10,12 +10,12 @@ $value = JSON::decode($json);
 ```
 
 - `JSON::encode()` will only accept values which can be converted into their exact original by `JSON::decode()`, so that `JSON::decode(JSON::encode($x)) === $x`. The accepted values are:
-  - `int`
-  - `string`
-  - `float` (but not `INF`, `-INF` or `NAN`)
-  - `bool`
-  - `null`
-  - `array` (whose contents are also valid)
+    - `int`
+    - `string`
+    - `float` (but not `INF`, `-INF` or `NAN`)
+    - `bool`
+    - `null`
+    - `array` (whose contents are also valid)
 
 - `JSON::encode()`/`JSON::decode()` will assume PHP strings are UTF-8 by default. To encode/decode binary or ISO-8859-1 strings, use `JSON::encode(..., true)` and `JSON::decode(..., true)`.
 
@@ -25,13 +25,13 @@ $value = JSON::decode($json);
 
 ## Serialization
 
-PureJSON provides a completely optional feature to assist in serializing PHP objects to and from JSON.
+The methods `JSON::serialize()` and `JSON::deserialize()` differ from `JSON::encode()` and `JSON::decode()` by mapping the JSON `{...}` syntax to and from PHP objects instead of to and from PHP associative arrays. Whereas `JSON::encode()` rejects objects and accepts associative arrays, `JSON::serialize()` rejects associative arrays and accepts objects.
 
-The methods `JSON::serialize()` and `JSON::deserialize()` are alternatives to `JSON::encode()` and `JSON::decode()` which map the JSON `{...}` syntax to and from PHP objects instead of to and from PHP associative arrays. Whereas `JSON::encode()` rejects objects and accepts associative arrays, `JSON::serialize()` rejects associative arrays and accepts objects.
+In order for `JSON::deserialize()` to reproduce an instance of the original class given to `JSON::serialize()`:
 
-Objects passed to `JSON::serialize()` must implement the `PureJSON\Serializable` interface.
-
-In order for `JSON::deserialize()` to reproduce an instance of the original class, the special property `@type` is filled by `JSON::serialize()` with the result of the `jsonType()` method of `PureJSON\Serializable`, and `JSON::deserialize()` accepts an explicit list of classes implementing `PureJSON\Serializable` to instantiate.
+1. Objects provided to `JSON::serialize()` must implement the `PureJSON\Serializable` interface.
+2. The method `jsonProps()` is used for properties and `jsonType()` is used to fill a special `@type` property to identify the type of the object.
+3. `JSON::deserialize()` requires an explicit list of classes implementing `PureJSON\Serializable` to possibly instantiate using the method `jsonCreate($props)`.
 
 (By storing a type tag instead of the PHP class name in JSON, the PHP class can be renamed while maintaining compatibility with existing serialized data, and if the JSON given to `JSON::deserialize()` is produced by an attacker, they cannot instantiate classes outside of the explicit list.)
 
@@ -43,7 +43,7 @@ With `JSON::encode()`/`JSON::decode()`:
 use PureJson\JSON;
 
 $company = array(
-	'name'      => 'Good Company',
+    'name'      => 'Good Company',
     'employees' => array(
     	array(
         	'name' => 'Jesse',
@@ -82,15 +82,15 @@ use PureJson\JSON;
 use PureJson\Serializable;
 
 class Company implements Serializable {
-    public static function jsonFromProps(array $props) {
+    public static function jsonCreate(array $props) {
         return new self($props['name'], $props['employees']);
     }
 
-	public static function jsonType() {
+    public static function jsonType() {
     	return 'company';
     }
 
-	private $name;
+    private $name;
     private $employees;
 
     public function __construct($name, $employees) {
@@ -98,7 +98,7 @@ class Company implements Serializable {
         $this->employees = $employees;
     }
 
-    public function jsonToProps() {
+    public function jsonProps() {
         return array(
             'name'      => $this->name,
             'employees' => $this->employees,
@@ -107,23 +107,23 @@ class Company implements Serializable {
 }
 
 class Employee implements Serializable {
-    public static function jsonFromProps(array $props) {
+    public static function jsonCreate(array $props) {
         return new self($props['name'], $props['role']);
     }
 
-	public static function jsonType() {
-    	return 'employee';
+    public static function jsonType() {
+        return 'employee';
     }
 
-	private $name;
+    private $name;
     private $role;
 
-	public function __construct($name, $role) {
-    	$this->name = $name;
+    public function __construct($name, $role) {
+        $this->name = $name;
         $this->role = $role;
     }
 
-    public function jsonToProps() {
+    public function jsonProps() {
         return array(
             'name' => $this->name,
             'role' => $this->role,
@@ -132,7 +132,7 @@ class Employee implements Serializable {
 }
 
 $company = new Company(
-	'Good Company',
+    'Good Company',
     array(
     	new Employee('Jesse', 'sales'),
         new Employee('Ben', 'development'),
@@ -142,7 +142,7 @@ $company = new Company(
 // serialize/deserialize will produce the original object graph
 $json    = JSON::serialize($company);
 $company = JSON::deserialize($json, array(
-	Company::class,
+    Company::class,
     Employee::class,
 ));
 ```
