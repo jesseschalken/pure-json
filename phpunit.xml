@@ -1,0 +1,13 @@
+<phpunit colors="true">
+    <testsuites>
+        <testsuite name="PureJSON">
+            <file>./JSONTest.php</file>
+        </testsuite>
+    </testsuites>
+    <filter>
+        <whitelist processUncoveredFilesFromWhitelist="true">
+            <file>./JSON.php</file>
+            <file>./php_compat.php</file>
+        </whitelist>
+    </filter>
+</phpunit>
