@@ -7,7 +7,7 @@ interface Serializable {
      * @param array $props
      * @return Serializable
      */
-    public static function jsonFromProps(array $props);
+    public static function jsonCreate(array $props);
 
     /**
      * @return string
@@ -17,10 +17,32 @@ interface Serializable {
     /**
      * @return array
      */
-    public function jsonToProps();
+    public function jsonProps();
 }
 
 final class JSON {
+    /**
+     * @see json_last_error_msg() in PHP (ext/json/json.c)
+     * @param int $error
+     * @return string
+     */
+    public static function getErrorMessage($error) {
+        static $messages = array(
+            JSON_ERROR_NONE                  => "No error",
+            JSON_ERROR_DEPTH                 => "Maximum stack depth exceeded",
+            JSON_ERROR_STATE_MISMATCH        => "State mismatch (invalid or malformed JSON)",
+            JSON_ERROR_CTRL_CHAR             => "Control character error, possibly incorrectly encoded",
+            JSON_ERROR_SYNTAX                => "Syntax error",
+            JSON_ERROR_UTF8                  => "Malformed UTF-8 characters, possibly incorrectly encoded",
+            JSON_ERROR_RECURSION             => "Recursion detected",
+            JSON_ERROR_INF_OR_NAN            => "Inf and NaN cannot be JSON encoded",
+            JSON_ERROR_UNSUPPORTED_TYPE      => "Type is not supported",
+            JSON_ERROR_INVALID_PROPERTY_NAME => "The decoded property name is invalid",
+            JSON_ERROR_UTF16                 => "Single unpaired UTF-16 surrogate in unicode escape",
+        );
+        return isset($messages[$error]) ? $messages[$error] : "Unknown error";
+    }
+
     /**
      * @param mixed $value
      * @param bool  $binary
@@ -36,6 +58,7 @@ final class JSON {
      * @param string[] $classes
      * @param bool     $binary
      * @return mixed
+     * @throws SerializationException
      */
     public static function deserialize($json, array $classes, $binary = false) {
         $classMap = array();
@@ -43,7 +66,7 @@ final class JSON {
         foreach ($classes as $class) {
             $type = $class::jsonType();
             if (isset($classMap[$type])) {
-                throw new SerializationException("Class list has two occurences of JSON type '$type' ($class and $classMap[$type])");
+                throw new SerializationException("Both '$class' and '$classMap[$type]' use JSON type tag '$type'");
             }
             $classMap[$type] = $class;
         }
@@ -59,10 +82,9 @@ final class JSON {
             }
         } else if (is_object($value)) {
             if ($value instanceof Serializable) {
-                return self::_serializeMany(array_replace(
-                    $value->jsonToProps(),
-                    array('@type' => $value->jsonType())
-                ));
+                $props = array('@type' => $value->jsonType());
+                $props = array_replace($props, $value->jsonProps(), $props);
+                return self::_serializeMany($props);
             } else {
                 throw new SerializationException("Objects must implement PureJSON\\Serializable");
             }
@@ -74,6 +96,7 @@ final class JSON {
     private static function _deserialize($value, array $classMap) {
         if (is_array($value)) {
             if (self::isAssoc($value)) {
+                $value = self::_deserializeMany($value, $classMap);
                 if (!isset($value['@type'])) {
                     throw new SerializationException("Object is missing @type property");
                 }
@@ -82,7 +105,7 @@ final class JSON {
                 if (!isset($classMap[$type])) {
                     throw new SerializationException("Type tag '$type' must be one of: " . join(', ', array_keys($classMap)));
                 }
-                return $classMap[$type]::jsonCreate(self::_deserializeMany($value, $classMap));
+                return $classMap[$type]::jsonCreate($value);
             } else {
                 return self::_deserializeMany($value, $classMap);
             }
@@ -172,15 +195,17 @@ final class JSON {
      * @throws JSONException
      */
     private static function checkValue($value) {
-        if (is_float($value) && !is_finite($value)) {
-            throw new JSONException("Inf and NaN cannot be JSON encoded", JSON_ERROR_INF_OR_NAN);
-        } else if (is_object($value) || is_resource($value)) {
-            throw new JSONException("Type is not supported", JSON_ERROR_UNSUPPORTED_TYPE);
+        if (is_object($value) || is_resource($value)) {
+            throw self::getError(JSON_ERROR_UNSUPPORTED_TYPE);
         } else if (is_array($value)) {
             foreach ($value as $v) {
                 self::checkValue($v);
             }
         }
+    }
+
+    private static function getError($error) {
+        return new JSONException(self::getErrorMessage($error), $error);
     }
 
     private static function checkError() {
