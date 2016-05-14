@@ -1,6 +1,6 @@
 {
   "name": "jesseschalken/pure-json",
-  "description": "json_encode/json_decode wrapper error checking and clean semantics",
+  "description": "json_encode/json_decode wrapper with error checking and one-to-one mapping between PHP and JSON values",
   "license": "LGPL-2.1",
   "authors": [
     {
