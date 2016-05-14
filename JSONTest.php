@@ -2,7 +2,35 @@
 
 namespace PureJSON;
 
-class JSONTest extends \PHPUnit_Framework_TestCase {
+abstract class SerializeTest implements Serializable {
+    public static function jsonCreate(array $props) {
+        return new static();
+    }
+
+    public function jsonProps() {
+        return array();
+    }
+}
+
+final class SerializeTest1 extends SerializeTest {
+    public static function jsonType() {
+        return 'test1';
+    }
+}
+
+final class SerializeTest2 extends SerializeTest {
+    public static function jsonType() {
+        return 'test2';
+    }
+}
+
+final class SerializeTest3 extends SerializeTest {
+    public static function jsonType() {
+        return 'test3';
+    }
+}
+
+final class JSONTest extends \PHPUnit_Framework_TestCase {
     /**
      * @expectedException \PureJSON\JSONException
      * @expectedExceptionCode    8
@@ -99,7 +127,7 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
         ini_set('memory_limit', '-1');
 
         $value1 = 'hello';
-        for ($i = 0; $i < 6; $i++) {
+        for ($i = 0; $i < 5; $i++) {
             $value1 = array_fill(0, 7, $value1);
         }
 
@@ -113,5 +141,97 @@ class JSONTest extends \PHPUnit_Framework_TestCase {
         printf(__METHOD__ . " took %.3fs\n", $t);
 
         self::assertEquals($value2, $value1);
+    }
+
+    public function testPretty() {
+        self::assertEquals(
+            JSON::encode(array(
+                'erjghb'  => array(
+                    845,
+                    34,
+                    234,
+                    63,
+                    true,
+                    null,
+                ),
+                'aergerg' => array(),
+            ), false, true),
+            <<<'s'
+{
+    "erjghb": [
+        845,
+        34,
+        234,
+        63,
+        true,
+        null
+    ],
+    "aergerg": []
+}
+s
+        );
+    }
+
+    public function testSerialization() {
+        $value1 = array(new SerializeTest1(), new SerializeTest2(), 100);
+        $value2 = JSON::deserialize(JSON::serialize($value1), array(
+            SerializeTest1::class,
+            SerializeTest2::class,
+            SerializeTest3::class,
+        ));
+        self::assertEquals($value2, $value1);
+    }
+
+    /**
+     * @throws SerializationException
+     * @expectedException \PureJSON\SerializationException
+     * @expectedExceptionCode    0
+     * @expectedExceptionMessage Type tag 'test1' must be one of: test2, test3
+     */
+    public function testSerializationError() {
+        JSON::deserialize(JSON::serialize(new SerializeTest1()), array(
+            SerializeTest2::class,
+            SerializeTest3::class,
+        ));
+    }
+
+    /**
+     * @expectedException \PureJSON\SerializationException
+     * @expectedExceptionCode    0
+     * @expectedExceptionMessage Both 'PureJSON\SerializeTest2' and 'PureJSON\SerializeTest2' use JSON type tag 'test2'
+     */
+    public function testDeserializeDuplicateClass() {
+        JSON::deserialize('null', array(
+            SerializeTest2::class,
+            SerializeTest2::class,
+            SerializeTest3::class,
+        ));
+    }
+
+    /**
+     * @expectedException \PureJSON\SerializationException
+     * @expectedExceptionCode    0
+     * @expectedExceptionMessage Object is missing @type property
+     */
+    public function testDeserializeNoTag() {
+        JSON::deserialize('{"foo": "bar"}', array());
+    }
+
+    /**
+     * @expectedException \PureJSON\SerializationException
+     * @expectedExceptionCode    0
+     * @expectedExceptionMessage Objects must implement PureJSON\Serializable
+     */
+    public function testSerializeUnserializable() {
+        JSON::serialize(new \stdClass());
+    }
+
+    /**
+     * @expectedException \PureJSON\SerializationException
+     * @expectedExceptionCode    0
+     * @expectedExceptionMessage Associative arrays are not supported
+     */
+    public function testSerializeAssocArray() {
+        JSON::serialize(array('ergerg' => 5));
     }
 }
